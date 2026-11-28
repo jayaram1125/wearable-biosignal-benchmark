@@ -11,7 +11,9 @@ stride_s: 2
 bandpass_hz: [0.5, 3.5]
 hr_range_bpm: [30, 210]
 quality:
-  acc_rms_max_g: 1.5        # window rejected above this accelerometer RMS (gravity removed)
+  acc_rms_max_g: 0.25       # window rejected above this accelerometer RMS in g (gravity removed).
+                            # Set from the motion scale of PPG-DaLiA S1-S2 (sedentary activities 90th pct <= 0.18 g,
+                            # locomotion medians >= 0.33 g), not from heart-rate error. See results/ for the sweep.
   flat_fraction_max: 0.2    # fraction of near-zero-derivative samples allowed
   amp_ratio_max: 5.0        # window amplitude vs median of subject, upper bound
   amp_ratio_min: 0.1        # lower bound
