@@ -56,6 +56,7 @@ jobs:
       - name: commit results
         run: |
           git config user.name "benchmark-bot" && git config user.email "actions@users.noreply.github.com"
+          git add results logs
+          git commit -m "results: heart-rate ${{ github.event.inputs.method || 'spectral' }} run ${{ github.run_id }}" || { echo "nothing to commit"; exit 0; }
           git pull --rebase
-          git add results logs && git commit -m "results: heart-rate ${{ github.event.inputs.method || 'spectral' }} run ${{ github.run_id }}" || echo "nothing to commit"
           git push
