@@ -1,0 +1,12 @@
+datasets/*
+!datasets/.gitkeep
+embeddings/
+weights/
+third_party/
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+logs/*.json
+!logs/.gitkeep

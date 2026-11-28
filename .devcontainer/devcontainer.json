@@ -1,0 +1,6 @@
+{
+  "name": "wearable-biosignal-benchmark",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "cd heart-rate-prediction-benchmark && pip install -e '.[dev,papagei,baselines]'",
+  "customizations": { "vscode": { "extensions": ["ms-python.python"] } }
+}

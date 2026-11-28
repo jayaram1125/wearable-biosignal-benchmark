@@ -1,0 +1,48 @@
+name: heart-rate benchmark
+on:
+  workflow_dispatch:
+    inputs:
+      method: { description: "spectral | kidppg | papagei", default: "spectral" }
+      subjects: { description: "comma-separated subset, blank = all 15", default: "" }
+  push:
+    tags: ["v*"]
+defaults:
+  run:
+    working-directory: heart-rate-prediction-benchmark
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e '.[dev]'
+      - run: pytest -q
+  benchmark:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e '.[dev,papagei,baselines]'
+      - name: cache dataset
+        uses: actions/cache@v4
+        with: { path: heart-rate-prediction-benchmark/datasets, key: ppg-dalia-v1 }
+      - run: bash scripts/download_dalia.sh
+      - name: papagei weights
+        if: ${{ github.event.inputs.method == 'papagei' }}
+        run: bash scripts/download_papagei.sh
+      - name: run
+        run: |
+          ARGS="--config configs/hr_dalia.yaml --method ${{ github.event.inputs.method || 'spectral' }}"
+          if [ -n "${{ github.event.inputs.subjects }}" ]; then ARGS="$ARGS --subjects ${{ github.event.inputs.subjects }}"; fi
+          python -m heart_rate.run $ARGS
+      - uses: actions/upload-artifact@v4
+        with: { name: hr-results-${{ github.run_id }}, path: "heart-rate-prediction-benchmark/results/*\nheart-rate-prediction-benchmark/logs/*.json" }
+      - name: commit results
+        run: |
+          git config user.name "benchmark-bot" && git config user.email "actions@users.noreply.github.com"
+          git add results logs && git commit -m "results: heart-rate ${{ github.event.inputs.method || 'spectral' }} run ${{ github.run_id }}" || echo "nothing to commit"
+          git push
