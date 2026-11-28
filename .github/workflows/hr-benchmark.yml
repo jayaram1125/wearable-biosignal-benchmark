@@ -1,4 +1,6 @@
 name: heart-rate benchmark
+permissions:
+  contents: write
 on:
   workflow_dispatch:
     inputs:
