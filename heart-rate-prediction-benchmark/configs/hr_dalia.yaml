@@ -1,0 +1,25 @@
+# Heart-rate benchmark, PPG-DaLiA, leave-one-subject-out. Protocol as in
+# PPG Heart-Rate Technical Architecture v0.2. Nothing here is tuned.
+dataset: ppg_dalia
+data_dir: datasets/PPG_FieldStudy
+subjects: [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14, S15]
+fs_ppg: 64
+fs_acc: 32
+fs_activity: 4
+window_s: 8
+stride_s: 2
+bandpass_hz: [0.5, 3.5]
+hr_range_bpm: [30, 210]
+quality:
+  acc_rms_max_g: 1.5        # window rejected above this accelerometer RMS (gravity removed)
+  flat_fraction_max: 0.2    # fraction of near-zero-derivative samples allowed
+  amp_ratio_max: 5.0        # window amplitude vs median of subject, upper bound
+  amp_ratio_min: 0.1        # lower bound
+papagei:
+  weights: weights/papagei_s.pt
+  repo: third_party/papagei-foundation-model
+  fs_model: 125
+  segment_s: 10
+  ridge_alpha: 1.0
+activities: {0: transient, 1: sitting, 2: stairs, 3: table_soccer, 4: cycling, 5: driving, 6: lunch, 7: walking, 8: working}
+seed: 0
