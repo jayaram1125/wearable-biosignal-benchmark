@@ -9,4 +9,4 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 logs/*.json
-!logs/.gitkeep
+!logs/.gitkeep.venv310/

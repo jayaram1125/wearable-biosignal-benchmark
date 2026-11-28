@@ -16,7 +16,7 @@ from heart_rate.spectral import spectral_hr
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", required=True)
-    ap.add_argument("--method", choices=["spectral", "papagei", "kidppg"], default="spectral")
+    ap.add_argument("--method", choices=["spectral", "papagei", "kidppg", "beliefppg"], default="spectral")
     ap.add_argument("--subjects", default=None, help="comma-separated subset, e.g. S1,S2")
     ap.add_argument("--out", default="results")
     a = ap.parse_args(argv)
@@ -27,6 +27,14 @@ def main(argv=None):
     accepted, feats = gate(D["ppg"], D["acc"], cfg["quality"])
     if a.method == "spectral":
         pred = spectral_hr(D["ppg"], cfg["fs_ppg"], tuple(cfg["bandpass_hz"]), tuple(cfg["hr_range_bpm"]))
+    elif a.method == "beliefppg":
+        from heart_rate.baselines import beliefppg_hr
+        from heart_rate.dalia import load_subject
+        parts = []
+        for s_ in subjects:
+            P = load_subject(cfg["data_dir"], s_, cfg)
+            parts.append(beliefppg_hr(P["bvp_raw"], P["acc_raw"], cfg["fs_ppg"], cfg["fs_acc"], len(P["y"]), cfg["window_s"], cfg["stride_s"]))
+        pred = np.concatenate(parts)
     elif a.method == "kidppg":
         from heart_rate.baselines import kidppg_hr
         pred = kidppg_hr(D["ppg"], D["acc"], cfg["fs_ppg"], cfg["fs_acc"])
@@ -44,7 +52,10 @@ def main(argv=None):
     overall = summarise(df, "pred"); by_act = summarise(df, "pred", by="activity"); by_sub = summarise(df, "pred", by="subject")
     log = write_log(f"logs/{stem}_{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}.json", cfg,
                     {"method": a.method, "subjects": subjects, "n_windows": int(len(df)), "seconds": round(time.time() - t0, 1)})
-    md = [f"# {cfg['dataset']} · {a.method} · leave-one-subject-out", "",
+    protocol = {"spectral": "no learning · leave-one-subject-out protocol", "papagei": "frozen encoder + ridge head · leave-one-subject-out",
+                "beliefppg": "pretrained package · reproduction check (PPG-DaLiA is in its training data)",
+                "kidppg": "pretrained package · reproduction check (PPG-DaLiA is in its training data)"}[a.method]
+    md = [f"# {cfg['dataset']} · {a.method} · {protocol}", "",
           f"Run {log['timestamp_utc']} · commit `{log['git_hash'][:12]}` · subjects {len(subjects)} · windows {len(df)}",
           "Preliminary, untuned. Protocol as in the PPG Heart-Rate Technical Architecture v0.2. MAE in bpm.", "",
           "## Overall", overall.round(3).to_markdown(), "", "## By activity", by_act.round(3).to_markdown(), "",

@@ -28,13 +28,24 @@ def kidppg_hr(ppg_win: np.ndarray, acc_win: np.ndarray, fs_ppg: float, fs_acc: f
     return np.asarray(preds)
 
 
-def beliefppg_hr(ppg: np.ndarray, acc: np.ndarray | None, fs_ppg: float, fs_acc: float):
-    """BeliefPPG on a whole recording (it models the HR sequence, so it takes the continuous
-    signal, not pre-cut windows). Returns the package's per-window HR estimates and their
-    window timestamps; align to the DaLiA label grid in the caller."""
+def beliefppg_hr(bvp: np.ndarray, acc: np.ndarray, fs_ppg: float, fs_acc: float,
+                 n_windows: int, window_s: float, stride_s: float) -> np.ndarray:
+    """BeliefPPG (pretrained) on one whole recording. infer_hr returns heart rates and the
+    time index (in PPG samples) of each window midpoint; those are aligned to the DaLiA
+    label grid (window i covers [i*stride, i*stride+window] s). Windows whose nearest
+    BeliefPPG estimate is more than 1 s away are left NaN.
+    Note: BeliefPPG's published training data includes PPG-DaLiA, so a DaLiA run is a
+    reproduction check of the package, not an out-of-sample evaluation."""
     try:
         from beliefppg import infer_hr
     except ImportError as e:
-        raise ImportError("pip install beliefppg") from e
-    # TODO(verify): argument names/order and the returned (hr, time) structure per README.
-    return infer_hr(ppg, acc, fs_ppg, fs_acc) if acc is not None else infer_hr(ppg, None, fs_ppg, None)
+        raise ImportError("pip install beliefppg (needs Python 3.10; see README)") from e
+    hr, t = infer_hr(np.asarray(bvp, float).reshape(-1, 1), int(fs_ppg), np.asarray(acc, float), int(fs_acc))
+    hr = np.asarray(hr, float).reshape(-1); t = np.asarray(t, float).reshape(-1)
+    mid = (np.arange(n_windows) * stride_s + window_s / 2.0) * fs_ppg
+    idx = np.clip(np.searchsorted(t, mid), 1, len(t) - 1)
+    left = idx - 1
+    pick = np.where(np.abs(t[left] - mid) <= np.abs(t[idx] - mid), left, idx)
+    out = hr[pick].copy()
+    out[np.abs(t[pick] - mid) > fs_ppg] = np.nan
+    return out

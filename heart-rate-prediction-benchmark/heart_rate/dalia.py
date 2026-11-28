@@ -27,7 +27,8 @@ def load_subject(data_dir: str, subject: str, cfg: dict) -> dict:
     fa, w, s = cfg["fs_activity"], cfg["window_s"], cfg["stride_s"]
     act_win = np.array([np.bincount(act[int(i * s * fa): int(i * s * fa + w * fa)].astype(int)).argmax()
                         if len(act[int(i * s * fa): int(i * s * fa + w * fa)]) else 0 for i in range(n)])
-    return {"subject": subject, "ppg": ppg_win[:n], "acc": acc_win[:n], "y": y[:n], "activity": act_win}
+    return {"subject": subject, "ppg": ppg_win[:n], "acc": acc_win[:n], "y": y[:n], "activity": act_win,
+            "bvp_raw": bvp, "acc_raw": acc}
 
 
 def load_all(data_dir: str, subjects: list[str], cfg: dict) -> dict:
