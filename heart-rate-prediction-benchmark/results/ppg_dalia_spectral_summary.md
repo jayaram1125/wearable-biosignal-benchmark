@@ -1,6 +1,6 @@
-# ppg_dalia · spectral · leave-one-subject-out
+# ppg_dalia · spectral · no learning · leave-one-subject-out protocol
 
-Run 2026-11-28T04:05:54Z · commit `5a7bdfae3f15` · subjects 15 · windows 64697
+Run 2026-11-28T05:15:35Z · commit `b91a8899a972` · subjects 15 · windows 64697
 Preliminary, untuned. Protocol as in the PPG Heart-Rate Technical Architecture v0.2. MAE in bpm.
 
 ## Overall
