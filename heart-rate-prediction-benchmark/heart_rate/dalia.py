@@ -8,13 +8,17 @@ from common.signal import make_windows
 
 
 def load_subject(data_dir: str, subject: str, cfg: dict) -> dict:
-    path = os.path.join(data_dir, subject, f"{subject}.pkl")
-    with open(path, "rb") as f:
-        d = pickle.load(f, encoding="latin1")
-    bvp = np.asarray(d["signal"]["wrist"]["BVP"], dtype=float).reshape(-1)
-    acc = np.asarray(d["signal"]["wrist"]["ACC"], dtype=float)        # (n, 3) in g
-    y = np.asarray(d["label"], dtype=float).reshape(-1)               # one HR per window
-    act = np.asarray(d["activity"], dtype=float).reshape(-1)
+    npz = os.path.join(data_dir, subject, f"{subject}.npz")
+    if os.path.exists(npz):                                            # compact form from prepare_dalia
+        z = np.load(npz)
+        bvp, acc, y, act = z["bvp"].astype(float), z["acc"].astype(float), z["label"].astype(float), z["activity"].astype(float)
+    else:                                                              # original pickle
+        with open(os.path.join(data_dir, subject, f"{subject}.pkl"), "rb") as f:
+            d = pickle.load(f, encoding="latin1")
+        bvp = np.asarray(d["signal"]["wrist"]["BVP"], dtype=float).reshape(-1)
+        acc = np.asarray(d["signal"]["wrist"]["ACC"], dtype=float)    # (n, 3) in g
+        y = np.asarray(d["label"], dtype=float).reshape(-1)           # one HR per window
+        act = np.asarray(d["activity"], dtype=float).reshape(-1)
     n = len(y)
     ppg_win = make_windows(bvp, cfg["fs_ppg"], cfg["window_s"], cfg["stride_s"], n)
     acc_win = np.stack([make_windows(acc[:, k], cfg["fs_acc"], cfg["window_s"], cfg["stride_s"], n) for k in range(3)], axis=1)
