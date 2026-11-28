@@ -48,7 +48,11 @@ jobs:
           if [ -n "${{ github.event.inputs.subjects }}" ]; then ARGS="$ARGS --subjects ${{ github.event.inputs.subjects }}"; fi
           python -m heart_rate.run $ARGS
       - uses: actions/upload-artifact@v4
-        with: { name: hr-results-${{ github.run_id }}, path: "heart-rate-prediction-benchmark/results/*\nheart-rate-prediction-benchmark/logs/*.json" }
+        with:
+          name: hr-results-${{ github.run_id }}
+          path: |
+            heart-rate-prediction-benchmark/results/*
+            heart-rate-prediction-benchmark/logs/*.json
       - name: commit results
         run: |
           git config user.name "benchmark-bot" && git config user.email "actions@users.noreply.github.com"
